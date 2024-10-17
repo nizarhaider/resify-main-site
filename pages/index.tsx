@@ -1,19 +1,25 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
+import { FilePond, registerPlugin } from "react-filepond";
+import "filepond/dist/filepond.css";
+
+// Register the FilePond plugins
+import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+registerPlugin(FilePondPluginFileValidateType);
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [bitmoji, setBitmoji] = useState<string | null>(null);
   const [responseData, setResponseData] = useState<any>(null);
   const [statusMessages, setStatusMessages] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
+  const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null); // Store the PDF content
 
   const imageSelectHandler = (image: string) => {
     setBitmoji(image);
@@ -32,24 +38,39 @@ const Home: NextPage = () => {
     }
   }, [loading]);
 
+  // Read the file content when files change
+  const handleFileChange = (fileItems: any) => {
+    const file = fileItems[0]?.file; // Get the first file
+    setFiles(fileItems.map((fileItem: { file: any; }) => fileItem.file)); // Update state with the files
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPdfContent(reader.result); // Set the PDF content
+      };
+      reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer for binary content
+    }
+  };
+
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !bitmoji) return;
+    if (files.length === 0 || !bitmoji) return;
 
     setLoading(true);
     setProgress(0); // Reset progress bar
 
     const formData = new FormData();
-    formData.append("file", file);
     const template_option = "Tech";
     const gender = bitmoji === "bitmoji_male.png" ? "male" : "female";
 
-    const url = `https://p06gwkgwea.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=Tech&gender=${gender}`;
+    // Use the PDF content in the fetch request
+    const url = `https://p06gwkgwea.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=${template_option}&gender=${gender}`;
 
     try {
+      // Send the PDF content as the request body
       const response = await fetch(url, {
         method: "POST",
-        body: formData,
+        body: pdfContent, // Send the PDF content directly
       });
 
       if (!response.ok) throw new Error("Failed to process the file");
@@ -81,38 +102,26 @@ const Home: NextPage = () => {
 
         <form onSubmit={submitHandler} className="max-w-xl w-full mt-10">
           <div className="flex items-center space-x-3 mb-5">
-            <Image src="/1-black.png" width={30} height={30} alt="PDF" />
             <p className="text-left font-medium">Upload your resume (PDF)</p>
           </div>
 
-          <div className="flex flex-col items-center mb-10">
-            <label className="cursor-pointer w-full">
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-              />
-              <button
-                type="button"
-                className="mt-2 bg-black rounded-xl text-white font-medium px-6 py-3 w-full shadow hover:bg-black/80 transition duration-200"
-                onClick={() => {
-                  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-                  fileInput?.click();
-                }}
-              >
-                Click to Upload Resume
-              </button>
-            </label>
+          <div className="mb-10">
+            <FilePond
+              files={files}
+              onupdatefiles={handleFileChange} // Use the new handler
+              allowMultiple={false}
+              name="file"
+              labelIdle='Drag & Drop your PDF or <span class="filepond--label-action">Browse</span>'
+              acceptedFileTypes={['application/pdf']}
+            />
           </div>
 
           <div className="flex items-center space-x-3 mb-5">
-            <Image src="/2-black.png" width={30} height={30} alt="Bitmoji" />
             <p className="text-left font-medium">Select your Bitmoji.</p>
           </div>
 
           <div className="flex justify-center space-x-5 sm:justify-around mb-5">
-            <Image
+            <img
               src="/bitmoji_male.png"
               alt="Male Bitmoji"
               width={140}
@@ -120,7 +129,7 @@ const Home: NextPage = () => {
               onClick={() => imageSelectHandler("bitmoji_male.png")}
               className={`cursor-pointer ${bitmoji === "bitmoji_male.png" ? 'border-2 border-black' : ''}`}
             />
-            <Image
+            <img
               src="/bitmoji_female.png"
               alt="Female Bitmoji"
               width={140}
