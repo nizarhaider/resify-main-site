@@ -11,16 +11,7 @@ export default function Footer() {
           rel="noreferrer"
           className="font-bold hover:underline transition underline-offset-2"
         >
-          Mixtral{" "}
-        </a>
-        and{" "}
-        <a
-          href="https://platform.openai.com/docs/models"
-          target="_blank"
-          rel="noreferrer"
-          className="font-bold hover:underline transition underline-offset-2"
-        >
-          GPT-3.5
+          GPT-4{" "}
         </a>
       </div>
       <div className="flex space-x-4 pb-4 sm:pb-0">

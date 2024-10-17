@@ -1,218 +1,201 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import DropDown, { VibeType } from "../components/DropDown";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import LoadingDots from "../components/LoadingDots";
-import {
-  createParser,
-  ParsedEvent,
-  ReconnectInterval,
-} from "eventsource-parser";
-import Toggle from "../components/Toggle";
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
-  const [bio, setBio] = useState("");
-  const [vibe, setVibe] = useState<VibeType>("Professional");
-  const [generatedBios, setGeneratedBios] = useState<String>("");
-  const [isGPT, setIsGPT] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [bitmoji, setBitmoji] = useState<string | null>(null);
+  const [responseData, setResponseData] = useState<any>(null);
+  const [statusMessages, setStatusMessages] = useState<string[]>([]);
+  const [progress, setProgress] = useState(0);
 
-  const bioRef = useRef<null | HTMLDivElement>(null);
-
-  const scrollToBios = () => {
-    if (bioRef.current !== null) {
-      bioRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+  const imageSelectHandler = (image: string) => {
+    setBitmoji(image);
   };
 
-  const prompt = `Generate 3 ${
-    vibe === "Casual" ? "relaxed" : vibe === "Funny" ? "silly" : "Professional"
-  } twitter biographies with no hashtags and clearly labeled "1.", "2.", and "3.". Only return these 3 twitter bios, nothing else. ${
-    vibe === "Funny" ? "Make the biographies humerous" : ""
-  }Make sure each generated biography is less than 300 characters, has short sentences that are found in Twitter bios, and feel free to use this context as well: ${bio}${
-    bio.slice(-1) === "." ? "" : "."
-  }`;
+  useEffect(() => {
+    if (loading) {
+      setStatusMessages(["Initializing..."]);
+      setTimeout(() => setStatusMessages((prev) => [...prev, "Uploading resume..."]), 5000);
+      setTimeout(() => setStatusMessages((prev) => [...prev, "Processing your data..."]), 10000);
+      setTimeout(() => setProgress(50), 5000); // Simulate progress
+      setTimeout(() => setProgress(80), 10000); // Simulate more progress
+    } else {
+      setStatusMessages([]); // Clear the messages after loading is done
+      setProgress(100); // Complete progress bar when done
+    }
+  }, [loading]);
 
-  console.log({ prompt });
-  console.log({ generatedBios });
-
-  const generateBio = async (e: any) => {
+  const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
-    setGeneratedBios("");
+    if (!file || !bitmoji) return;
+
     setLoading(true);
-    const response = await fetch(isGPT ? "/api/openai" : "/api/mistral", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-      }),
-    });
+    setProgress(0); // Reset progress bar
 
-    if (!response.ok) {
-      throw new Error(response.statusText);
+    const formData = new FormData();
+    formData.append("file", file);
+    const template_option = "Tech";
+    const gender = bitmoji === "bitmoji_male.png" ? "male" : "female";
+
+    const url = `https://p06gwkgwea.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=Tech&gender=${gender}`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to process the file");
+
+      const data = await response.json();
+      setResponseData(data);
+
+      toast.success("Processing Complete!");
+    } catch (error) {
+      toast.error("An error occurred during processing.");
+    } finally {
+      setLoading(false);
     }
-
-    // This data is a ReadableStream
-    const data = response.body;
-    if (!data) {
-      return;
-    }
-
-    const onParseGPT = (event: ParsedEvent | ReconnectInterval) => {
-      if (event.type === "event") {
-        const data = event.data;
-        try {
-          const text = JSON.parse(data).text ?? "";
-          setGeneratedBios((prev) => prev + text);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    };
-
-    const onParseMistral = (event: ParsedEvent | ReconnectInterval) => {
-      if (event.type === "event") {
-        const data = event.data;
-        try {
-          const text = JSON.parse(data).choices[0].text ?? "";
-          setGeneratedBios((prev) => prev + text);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    };
-
-    const onParse = isGPT ? onParseGPT : onParseMistral;
-
-    // https://web.dev/streams/#the-getreader-and-read-methods
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    const parser = createParser(onParse);
-    let done = false;
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-      parser.feed(chunkValue);
-    }
-    scrollToBios();
-    setLoading(false);
   };
 
   return (
-    <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
+    <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen px-4">
       <Head>
-        <title>Twitter Bio Generator</title>
+        <title>Resify</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <Header />
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
-        <p className="border rounded-2xl py-1 px-4 text-slate-500 text-sm mb-5 hover:scale-105 transition duration-300 ease-in-out">
-          <b>96,434</b> bios generated so far
-        </p>
-        <h1 className="sm:text-6xl text-4xl max-w-[708px] font-bold text-slate-900">
-          Generate your next Twitter bio using AI
-        </h1>
-        <div className="mt-7">
-          <Toggle isGPT={isGPT} setIsGPT={setIsGPT} />
-        </div>
 
-        <div className="max-w-xl w-full">
-          <div className="flex mt-10 items-center space-x-3">
+      <main className="flex flex-1 w-full flex-col items-center justify-center text-center sm:px-4 mt-12 sm:mt-20">
+        <h1 className="text-3xl sm:text-6xl font-bold max-w-[90%] sm:max-w-[708px] text-slate-900">
+          Generate your next Website portfolio using AI
+        </h1>
+
+        <form onSubmit={submitHandler} className="max-w-xl w-full mt-10">
+          <div className="flex items-center space-x-3 mb-5">
+            <Image src="/1-black.png" width={30} height={30} alt="PDF" />
+            <p className="text-left font-medium">Upload your resume (PDF)</p>
+          </div>
+
+          <div className="flex flex-col items-center mb-10">
+            <label className="cursor-pointer w-full">
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <button
+                type="button"
+                className="mt-2 bg-black rounded-xl text-white font-medium px-6 py-3 w-full shadow hover:bg-black/80 transition duration-200"
+                onClick={() => {
+                  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                  fileInput?.click();
+                }}
+              >
+                Click to Upload Resume
+              </button>
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-3 mb-5">
+            <Image src="/2-black.png" width={30} height={30} alt="Bitmoji" />
+            <p className="text-left font-medium">Select your Bitmoji.</p>
+          </div>
+
+          <div className="flex justify-center space-x-5 sm:justify-around mb-5">
             <Image
-              src="/1-black.png"
-              width={30}
-              height={30}
-              alt="1 icon"
-              className="mb-5 sm:mb-0"
+              src="/bitmoji_male.png"
+              alt="Male Bitmoji"
+              width={140}
+              height={150}
+              onClick={() => imageSelectHandler("bitmoji_male.png")}
+              className={`cursor-pointer ${bitmoji === "bitmoji_male.png" ? 'border-2 border-black' : ''}`}
             />
-            <p className="text-left font-medium">
-              Drop in your job{" "}
-              <span className="text-slate-500">(or your favorite hobby)</span>.
-            </p>
-          </div>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            rows={4}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black my-5"
-            placeholder={"e.g. Amazon CEO"}
-          />
-          <div className="flex mb-5 items-center space-x-3">
-            <Image src="/2-black.png" width={30} height={30} alt="1 icon" />
-            <p className="text-left font-medium">Select your vibe.</p>
-          </div>
-          <div className="block">
-            <DropDown vibe={vibe} setVibe={(newVibe) => setVibe(newVibe)} />
+            <Image
+              src="/bitmoji_female.png"
+              alt="Female Bitmoji"
+              width={140}
+              height={150}
+              onClick={() => imageSelectHandler("bitmoji_female.png")}
+              className={`cursor-pointer ${bitmoji === "bitmoji_female.png" ? 'border-2 border-black' : ''}`}
+            />
           </div>
 
           {!loading && (
             <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
-              onClick={(e) => generateBio(e)}
+              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
+              type="submit"
             >
-              Generate your bio &rarr;
+              Generate Website &rarr;
             </button>
           )}
+
           {loading && (
-            <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 sm:mt-10 mt-8 hover:bg-black/80 w-full"
-              disabled
-            >
-              <LoadingDots color="white" style="large" />
-            </button>
+            <div className="w-full">
+              <div className="bg-gray-200 rounded-full h-4 mb-4">
+                <div
+                  className="bg-blue-600 h-4 rounded-full transition-all duration-200"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              {statusMessages.map((message, index) => (
+                <p key={index} className="text-gray-700">
+                  {message}
+                </p>
+              ))}
+              <button
+                className="bg-black rounded-xl text-white font-medium px-4 py-2 disabled w-full"
+                disabled
+              >
+                <LoadingDots color="white" style="large" />
+              </button>
+            </div>
           )}
-        </div>
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-          toastOptions={{ duration: 2000 }}
-        />
-        <hr className="h-px bg-gray-700 border-1 dark:bg-gray-700" />
-        <div className="space-y-10 my-10">
-          {generatedBios && (
-            <>
-              <div>
-                <h2
-                  className="sm:text-4xl text-3xl font-bold text-slate-900 mx-auto"
-                  ref={bioRef}
+        </form>
+
+        {responseData && (
+          <div className="mt-10 text-left bg-gray-100 p-6 rounded-lg shadow-lg max-w-full sm:max-w-lg w-full">
+            <h3 className="sm:text-2xl text-xl font-bold text-slate-900 mb-4 border-b-2 border-gray-300 pb-2">
+              Result:
+            </h3>
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center">
+                <span className="font-semibold text-gray-700">Total Tokens:</span>
+                <span className="ml-2 text-gray-900">{responseData.total_tokens}</span>
+              </div>
+
+              <div className="flex items-center">
+                <span className="font-semibold text-gray-700">Cost Incurred:</span>
+                <span className="ml-2 text-gray-900">{responseData.cost_incurred}</span>
+              </div>
+
+              <div className="flex items-center">
+                <span className="font-semibold text-gray-700">Website URL:</span>
+                <a 
+                  href={responseData.website_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ml-2 text-blue-600 underline hover:text-blue-800"
                 >
-                  Your generated bios
-                </h2>
+                  {responseData.website_url}
+                </a>
               </div>
-              <div className="space-y-8 flex flex-col items-center justify-center max-w-xl mx-auto">
-                {generatedBios
-                  .substring(generatedBios.indexOf("1") + 3)
-                  .split(/2\.|3\./)
-                  .map((generatedBio) => {
-                    return (
-                      <div
-                        className="bg-white rounded-xl shadow-md p-4 hover:bg-gray-100 transition cursor-copy border"
-                        onClick={() => {
-                          navigator.clipboard.writeText(generatedBio);
-                          toast("Bio copied to clipboard", {
-                            icon: "✂️",
-                          });
-                        }}
-                        key={generatedBio}
-                      >
-                        <p>{generatedBio}</p>
-                      </div>
-                    );
-                  })}
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
+
+        <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 2000 }} />
+        <Footer />
       </main>
-      <Footer />
     </div>
   );
 };
