@@ -1,5 +1,6 @@
 import type { NextPage } from "next";
 import Head from "next/head";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import Footer from "../components/Footer";
@@ -101,7 +102,9 @@ const Home: NextPage = () => {
         </h1>
 
         <form onSubmit={submitHandler} className="max-w-xl w-full mt-10">
+
           <div className="flex items-center space-x-3 mb-5">
+          <Image src="/1-black.png" width={30} height={30} alt="Bitmoji" />
             <p className="text-left font-medium">Upload your resume (PDF)</p>
           </div>
 
@@ -119,6 +122,8 @@ const Home: NextPage = () => {
           <div className="flex items-center space-x-3 mb-5">
             <p className="text-left font-medium">Select your Bitmoji.</p>
           </div>
+
+          <Image src="/2-black.png" width={30} height={30} alt="Bitmoji" />
 
           <div className="flex justify-center space-x-5 sm:justify-around mb-5">
             <img
