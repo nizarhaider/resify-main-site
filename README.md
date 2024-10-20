@@ -1,6 +1,6 @@
-# [twitterbio.io](https://www.twitterbio.io/)
+# [Resify](https://resify-site.netlify.app/)
 
-This project generates Twitter (X) bios for you using AI.
+This project generates a website from just your resume in one click.
 
 [![Twitter Bio Generator](./public/screenshot.png)](https://www.twitterbio.io)
 
