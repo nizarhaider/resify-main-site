@@ -2,10 +2,12 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import Hero from "../components/Hero";
+import TestHero from "../components/test_hero";
 
 const Home: NextPage = () => {
   return (
-    <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
       <Head>
         <title>Welcome to Resify</title>
         <link rel="icon" href="/favicon.ico" />
@@ -13,28 +15,42 @@ const Home: NextPage = () => {
 
       <Header />
 
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold max-w-[95%] sm:max-w-[708px] text-slate-900">
-          Welcome to Resify
-        </h1>
-
-        <p className="text-base sm:text-lg md:text-xl max-w-[95%] sm:max-w-[708px] text-slate-700 mt-4">
-          Easily convert your resume into a personalized website using AI.
-        </p>
-
-        <div className="mt-10 space-y-4 sm:space-x-4 sm:space-y-0 flex flex-col sm:flex-row">
-          <a
-            href="/optimize-resume"
-            className="bg-black text-white font-medium px-6 py-3 rounded-lg hover:bg-black/80 transition duration-200"
-          >
-            Optimize Resume
-          </a>
-          <a
-            href="/convert-to-website"
-            className="bg-black text-white font-medium px-6 py-3 rounded-lg hover:bg-black/80 transition duration-200"
-          >
-            Convert Resume to Website
-          </a>
+      <main className="flex flex-1 w-full flex-col items-center text-center mt-12 sm:mt-20">
+        {/* Hero Section */}
+        {/* <Hero/> */}
+        <TestHero/>
+        {/* Increased spacing between hero and services */}
+        <div className="mt-28 w-full max-w-5xl px-4">
+          {/* Services Section */}
+          <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-12">
+            Our Services
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-slate-800">Resume Optimization</h3>
+              <p className="text-gray-600 mt-2">
+                Improve your resume's chances of getting noticed by ATS systems with our expert optimization service.
+              </p>
+            </div>
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-slate-800">Website Conversion</h3>
+              <p className="text-gray-600 mt-2">
+                Transform your resume into a professional website that showcases your skills and experiences beautifully.
+              </p>
+            </div>
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-slate-800">Personalized Templates</h3>
+              <p className="text-gray-600 mt-2">
+                Choose from a variety of stunning templates to make your resume stand out.
+              </p>
+            </div>
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold text-slate-800">AI-Powered Insights</h3>
+              <p className="text-gray-600 mt-2">
+                Get data-driven insights into your resume and receive actionable feedback to enhance its effectiveness.
+              </p>
+            </div>
+          </div>
         </div>
       </main>
 

@@ -9,7 +9,7 @@ interface ATSProps {
   } | null;
 }
 
-const ATSSummary: React.FC<ATSProps> = ({ responseData }) => {
+export default function ATSSummary(responseData: any) {
   if (!responseData) return null;
 
   const parsedContent = JSON.parse(responseData.content);
@@ -43,7 +43,7 @@ const ATSSummary: React.FC<ATSProps> = ({ responseData }) => {
           <p className="font-semibold mt-2">Issues:</p>
           <ul className="list-disc pl-5">
             {issues.map((issue, index) => (
-              <li key={index}>{issue}</li>
+              <li key={index} className="text-red-600">{issue}</li> 
             ))}
           </ul>
         </div>
@@ -114,5 +114,3 @@ const ATSSummary: React.FC<ATSProps> = ({ responseData }) => {
     </div>
   );
 };
-
-export default ATSSummary;
