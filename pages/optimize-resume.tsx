@@ -57,7 +57,7 @@ const OptimizeResume: NextPage = () => {
 
     const formData = new FormData();
 
-    const url = `https://p06gwkgwea.execute-api.ap-southeast-1.amazonaws.com/prod/optimize_resume`;
+    const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/optimize_resume`;
 
     try {
       const response = await fetch(url, {

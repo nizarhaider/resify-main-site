@@ -65,7 +65,7 @@ const Home: NextPage = () => {
     const gender = bitmoji === "bitmoji_male.png" ? "male" : "female";
 
     // Use the PDF content in the fetch request
-    const url = `https://p06gwkgwea.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=${template_option}&gender=${gender}`;
+    const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=${template_option}&gender=${gender}`;
 
     try {
       // Send the PDF content as the request body
