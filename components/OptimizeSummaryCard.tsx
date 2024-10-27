@@ -1,18 +1,11 @@
 // ATSSummary.tsx
 import React from 'react';
 
-interface ATSProps {
-  responseData: {
-    content: string;
-    total_tokens: number;
-    cost_incurred: string;
-  } | null;
-}
-
-export default function ATSSummary(responseData: any) {
+export default function ATSSummary({ responseData }: { responseData: any }) {
   if (!responseData) return null;
 
-  const parsedContent = JSON.parse(responseData.content);
+  const { content, total_tokens, cost_incurred } = responseData;
+  const atsSummary = content.ats_summary;
   const maxScores = {
     layout: 6,
     keywords: 6,
@@ -29,7 +22,7 @@ export default function ATSSummary(responseData: any) {
   ) => (
     <div className="mb-4">
       <h3 className="text-xl font-semibold">{title}</h3>
-      <p>
+      <div>
         <strong>Score:</strong> {score} / {maxScore}
         <div className="bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
           <div
@@ -37,7 +30,7 @@ export default function ATSSummary(responseData: any) {
             style={{ width: `${(Number(score) / maxScore) * 100}%` }}
           ></div>
         </div>
-      </p>
+      </div>
       {issues.length > 0 && (
         <div>
           <p className="font-semibold mt-2">Issues:</p>
@@ -65,51 +58,53 @@ export default function ATSSummary(responseData: any) {
     <div className="mt-10 text-left bg-gray-100 p-6 rounded-lg shadow-lg max-w-full sm:max-w-lg w-full">
       <h2 className="text-2xl font-bold mb-4">ATS Summary</h2>
 
-      {parsedContent.optimize_resume_output.ats_summary.metrics?.layout &&
+      {atsSummary.metrics.layout &&
         renderIssuesAndActions(
           "Layout",
-          parsedContent.optimize_resume_output.ats_summary.metrics.layout.score,
+          atsSummary.metrics.layout.score,
           maxScores.layout,
-          parsedContent.optimize_resume_output.ats_summary.metrics.layout.issues,
-          parsedContent.optimize_resume_output.ats_summary.metrics.layout.recommended_actions
+          atsSummary.metrics.layout.issues,
+          atsSummary.metrics.layout.recommended_actions
         )}
 
-      {parsedContent.optimize_resume_output.ats_summary.metrics?.keywords &&
+      {atsSummary.metrics.keywords &&
         renderIssuesAndActions(
           "Keywords",
-          parsedContent.optimize_resume_output.ats_summary.metrics.keywords.score,
+          atsSummary.metrics.keywords.score,
           maxScores.keywords,
-          parsedContent.optimize_resume_output.ats_summary.metrics.keywords.issues,
-          parsedContent.optimize_resume_output.ats_summary.metrics.keywords.recommended_actions
+          atsSummary.metrics.keywords.issues,
+          atsSummary.metrics.keywords.recommended_actions
         )}
 
-      {parsedContent.optimize_resume_output.ats_summary.metrics?.spelling_and_grammar &&
+      {atsSummary.metrics.spelling_and_grammar &&
         renderIssuesAndActions(
           "Spelling & Grammar",
-          parsedContent.optimize_resume_output.ats_summary.metrics.spelling_and_grammar.score,
+          atsSummary.metrics.spelling_and_grammar.score,
           maxScores.spelling_and_grammar,
-          [parsedContent.optimize_resume_output.ats_summary.metrics.spelling_and_grammar.issues],
-          parsedContent.optimize_resume_output.ats_summary.metrics.spelling_and_grammar.recommended_actions
+          Array.isArray(atsSummary.metrics.spelling_and_grammar.issues)
+            ? atsSummary.metrics.spelling_and_grammar.issues
+            : [atsSummary.metrics.spelling_and_grammar.issues],
+          atsSummary.metrics.spelling_and_grammar.recommended_actions
         )}
 
-      {parsedContent.optimize_resume_output.ats_summary.metrics?.experience_quality &&
+      {atsSummary.metrics.experience_quality &&
         renderIssuesAndActions(
           "Experience Quality",
-          parsedContent.optimize_resume_output.ats_summary.metrics.experience_quality.score,
+          atsSummary.metrics.experience_quality.score,
           maxScores.experience_quality,
-          parsedContent.optimize_resume_output.ats_summary.metrics.experience_quality.issues,
-          parsedContent.optimize_resume_output.ats_summary.metrics.experience_quality.recommended_actions
+          atsSummary.metrics.experience_quality.issues,
+          atsSummary.metrics.experience_quality.recommended_actions
         )}
 
-      {parsedContent.optimize_resume_output.ats_summary.final_score && (
+      {atsSummary.final_score && (
         <div className="mt-4">
-          <h3 className="text-xl font-bold">Final Score: {parsedContent.optimize_resume_output.ats_summary.final_score}</h3>
+          <h3 className="text-xl font-bold">Final Score: {atsSummary.final_score}</h3>
         </div>
       )}
 
       <div className="mt-4">
-        <h3 className="text-lg font-semibold">Total Tokens: {responseData.total_tokens}</h3>
-        <h3 className="text-lg font-semibold">Cost Incurred: {responseData.cost_incurred}</h3>
+        <h3 className="text-lg font-semibold">Total Tokens: {total_tokens}</h3>
+        <h3 className="text-lg font-semibold">Cost Incurred: {cost_incurred}</h3>
       </div>
     </div>
   );

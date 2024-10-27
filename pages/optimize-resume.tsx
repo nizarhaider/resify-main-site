@@ -10,7 +10,6 @@ import { FilePond, registerPlugin } from "react-filepond";
 import "filepond/dist/filepond.css";
 import ATSSummary from '../components/OptimizeSummaryCard';
 
-// Register the FilePond plugins
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
 registerPlugin(FilePondPluginFileValidateType);
 
@@ -20,32 +19,29 @@ const OptimizeResume: NextPage = () => {
   const [responseData, setResponseData] = useState<any>(null);
   const [statusMessages, setStatusMessages] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
-  const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null); // Store the PDF content
-
+  const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null);
 
   useEffect(() => {
     if (loading) {
       setStatusMessages(["Initializing..."]);
       setTimeout(() => setStatusMessages((prev) => [...prev, "Uploading resume..."]), 2000);
       setTimeout(() => setStatusMessages((prev) => [...prev, "Processing your data..."]), 10000);
-
     } else {
-      setStatusMessages([]); // Clear the messages after loading is done
-      setProgress(100); // Complete progress bar when done
+      setStatusMessages([]);
+      setProgress(100);
     }
   }, [loading]);
 
-  // Read the file content when files change
   const handleFileChange = (fileItems: any) => {
-    const file = fileItems[0]?.file; // Get the first file
-    setFiles(fileItems.map((fileItem: { file: any }) => fileItem.file)); // Update state with the files
+    const file = fileItems[0]?.file;
+    setFiles(fileItems.map((fileItem: { file: any }) => fileItem.file));
 
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setPdfContent(reader.result); // Set the PDF content
+        setPdfContent(reader.result);
       };
-      reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer for binary content
+      reader.readAsArrayBuffer(file);
     }
   };
 
@@ -53,16 +49,14 @@ const OptimizeResume: NextPage = () => {
     e.preventDefault();
 
     setLoading(true);
-    setProgress(0); // Reset progress bar
+    setProgress(0);
 
-    const formData = new FormData();
-
-    const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/optimize_resume`;
+    const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/assess_resume`;
 
     try {
       const response = await fetch(url, {
         method: "POST",
-        body: pdfContent, 
+        body: pdfContent,
       });
 
       if (!response.ok) throw new Error("Failed to process the file");
@@ -101,7 +95,7 @@ const OptimizeResume: NextPage = () => {
           <div className="mb-10">
             <FilePond
               files={files}
-              onupdatefiles={handleFileChange} // Use the new handler
+              onupdatefiles={handleFileChange}
               allowMultiple={false}
               name="file"
               labelIdle='Drag & Drop your PDF or <span class="filepond--label-action">Browse</span>'
@@ -109,16 +103,14 @@ const OptimizeResume: NextPage = () => {
             />
           </div>
 
-          {!loading && (
+          {!loading ? (
             <button
               className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
               type="submit"
             >
               Optimize Resume &rarr;
             </button>
-          )}
-
-          {loading && (
+          ) : (
             <div className="w-full">
               <div className="bg-gray-200 rounded-full h-4 mb-4">
                 <div
@@ -131,19 +123,14 @@ const OptimizeResume: NextPage = () => {
                   {message}
                 </p>
               ))}
-              <button
-                className="bg-black rounded-xl text-white font-medium px-4 py-2 disabled w-full"
-                disabled
-              >
+              <div className="bg-black rounded-xl text-white font-medium px-4 py-2 disabled w-full">
                 <LoadingDots color="white" style="large" />
-              </button>
+              </div>
             </div>
           )}
         </form>
 
         {responseData && <ATSSummary responseData={responseData} />}
-
-
 
         <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 2000 }} />
         <Footer />
