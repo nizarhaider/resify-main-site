@@ -1,55 +1,57 @@
 import type { NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import LoadingDots from "../components/LoadingDots";
 import { FilePond, registerPlugin } from "react-filepond";
 import "filepond/dist/filepond.css";
+import CircularProgress from "@mui/material/CircularProgress";
 
 // Register the FilePond plugins
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+import React from "react";
 registerPlugin(FilePondPluginFileValidateType);
+
+function GradientCircularProgress() {
+  return (
+    <React.Fragment>
+      <svg width={0} height={0}>
+        <defs>
+          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e01cd5" />
+            <stop offset="100%" stopColor="#1CB5E0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <CircularProgress sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }} />
+    </React.Fragment>
+  );
+}
 
 const Home: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [bitmoji, setBitmoji] = useState<string | null>(null);
   const [responseData, setResponseData] = useState<any>(null);
-  const [statusMessages, setStatusMessages] = useState<string[]>([]);
-  const [progress, setProgress] = useState(0);
-  const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null); // Store the PDF content
+  const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null);
 
   const imageSelectHandler = (image: string) => {
     setBitmoji(image);
   };
 
-  useEffect(() => {
-    if (loading) {
-      setStatusMessages(["Initializing..."]);
-      setTimeout(() => setStatusMessages((prev) => [...prev, "Uploading resume..."]), 5000);
-      setTimeout(() => setStatusMessages((prev) => [...prev, "Processing your data..."]), 10000);
-      setTimeout(() => setProgress(50), 5000); // Simulate progress
-      setTimeout(() => setProgress(80), 10000); // Simulate more progress
-    } else {
-      setStatusMessages([]); // Clear the messages after loading is done
-      setProgress(100); // Complete progress bar when done
-    }
-  }, [loading]);
 
-  // Read the file content when files change
   const handleFileChange = (fileItems: any) => {
-    const file = fileItems[0]?.file; // Get the first file
-    setFiles(fileItems.map((fileItem: { file: any; }) => fileItem.file)); // Update state with the files
+    const file = fileItems[0]?.file;
+    setFiles(fileItems.map((fileItem: { file: any; }) => fileItem.file));
 
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setPdfContent(reader.result); // Set the PDF content
+        setPdfContent(reader.result);
       };
-      reader.readAsArrayBuffer(file); // Read the file as an ArrayBuffer for binary content
+      reader.readAsArrayBuffer(file);
     }
   };
 
@@ -58,27 +60,22 @@ const Home: NextPage = () => {
     if (files.length === 0 || !bitmoji) return;
 
     setLoading(true);
-    setProgress(0); // Reset progress bar
 
     const formData = new FormData();
     const template_option = "Tech";
     const gender = bitmoji === "bitmoji_male.png" ? "male" : "female";
-
-    // Use the PDF content in the fetch request
     const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=${template_option}&gender=${gender}`;
 
     try {
-      // Send the PDF content as the request body
       const response = await fetch(url, {
         method: "POST",
-        body: pdfContent, // Send the PDF content directly
+        body: pdfContent,
       });
 
       if (!response.ok) throw new Error("Failed to process the file");
 
       const data = await response.json();
       setResponseData(data);
-
       toast.success("Processing Complete!");
     } catch (error) {
       toast.error("An error occurred during processing.");
@@ -102,16 +99,15 @@ const Home: NextPage = () => {
         </h1>
 
         <form onSubmit={submitHandler} className="max-w-xl w-full mt-10">
-
           <div className="flex items-center space-x-3 mb-5">
-          <Image src="/1-black.png" width={30} height={30} alt="Bitmoji" />
+            <Image src="/1-black.png" width={30} height={30} alt="Bitmoji" />
             <p className="text-left font-medium">Upload your resume (PDF)</p>
           </div>
 
           <div className="mb-10">
             <FilePond
               files={files}
-              onupdatefiles={handleFileChange} // Use the new handler
+              onupdatefiles={handleFileChange}
               allowMultiple={false}
               name="file"
               labelIdle='Drag & Drop your PDF or <span class="filepond--label-action">Browse</span>'
@@ -144,34 +140,16 @@ const Home: NextPage = () => {
             />
           </div>
 
-          {!loading && (
+          {!loading ? (
             <button
               className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
               type="submit"
             >
               Generate Website &rarr;
             </button>
-          )}
-
-          {loading && (
-            <div className="w-full">
-              <div className="bg-gray-200 rounded-full h-4 mb-4">
-                <div
-                  className="bg-blue-600 h-4 rounded-full transition-all duration-200"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              {statusMessages.map((message, index) => (
-                <p key={index} className="text-gray-700">
-                  {message}
-                </p>
-              ))}
-              <button
-                className="bg-black rounded-xl text-white font-medium px-4 py-2 disabled w-full"
-                disabled
-              >
-                <LoadingDots color="white" style="large" />
-              </button>
+          ) : (
+            <div className="flex justify-center w-full py-4">
+              <GradientCircularProgress />
             </div>
           )}
         </form>
