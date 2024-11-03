@@ -64,7 +64,7 @@ const Home: NextPage = () => {
     const formData = new FormData();
     const template_option = "Tech";
     const gender = bitmoji === "bitmoji_male.png" ? "male" : "female";
-    const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=${template_option}&gender=${gender}`;
+    const url = `https://5g1par1mud.execute-api.ap-southeast-1.amazonaws.com/prod/resume_to_website?template_option=${template_option}&gender=${gender}`;
 
     try {
       const response = await fetch(url, {

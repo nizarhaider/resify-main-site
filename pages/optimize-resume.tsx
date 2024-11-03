@@ -40,7 +40,7 @@ const OptimizeResume: NextPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    const url = `https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/assess_resume`;
+    const url = `https://5g1par1mud.execute-api.ap-southeast-1.amazonaws.com/prod/assess_resume`;
 
     try {
       const response = await fetch(url, {
