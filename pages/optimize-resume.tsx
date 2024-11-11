@@ -8,6 +8,7 @@ import Header from "../components/Header";
 import { FilePond, registerPlugin } from "react-filepond";
 import "filepond/dist/filepond.css";
 import ATSSummary from "../components/OptimizeSummaryCard";
+import DownloadDialog from "../components/DownloadDialog"; // New Component
 import CircularProgress from "@mui/material/CircularProgress";
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
 import React from "react";
@@ -20,8 +21,8 @@ const OptimizeResume: NextPage = () => {
   const [responseData, setResponseData] = useState<any>(null);
   const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null);
   const [imgContent, setImgContent] = useState<string | ArrayBuffer | null>(null);
-
-  const [optimizedPdfUrl, setOptimizedPdfUrl] = useState<string | null>(null);
+  const [optimizedPdfContent, setOptimizedPdfContent] = useState<Blob | null>(null);
+  const [showDialog, setShowDialog] = useState(false); // Dialog control
 
   const handleFileChange = (fileItems: any) => {
     const file = fileItems[0]?.file;
@@ -39,6 +40,7 @@ const OptimizeResume: NextPage = () => {
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setShowDialog(false);
 
     const url = `https://5g1par1mud.execute-api.ap-southeast-1.amazonaws.com/prod/assess_resume`;
 
@@ -52,8 +54,7 @@ const OptimizeResume: NextPage = () => {
 
       const data = await response.json();
       setResponseData(data);
-      const { image_encoded } = data;
-      setImgContent(image_encoded);
+      setImgContent(data.image_encoded);
       
       toast.success("Processing Complete!");
     } catch (error) {
@@ -65,26 +66,20 @@ const OptimizeResume: NextPage = () => {
 
   const fixIssuesHandler = async () => {
     if (!pdfContent) return;
-
+  
     setLoading(true);
-    setResponseData(null); // Hide ATSSummary
-
+  
     try {
-      const response = await fetch("https://acgtr3fps5.execute-api.ap-southeast-1.amazonaws.com/prod/optimize_resume", {
+      const response = await fetch("https://5g1par1mud.execute-api.ap-southeast-1.amazonaws.com/prod/optimize_resume", {
         method: "POST",
         body: imgContent,
       });
-
+  
       if (!response.ok) throw new Error("Failed to fix issues");
-
-      const result = await response.json();
-      const pdfBase64 = result.body; // Extract the Base64 PDF
-
-      // Create a Blob from the Base64-encoded PDF and generate a download link
-      const pdfBlob = new Blob([Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0))], { type: "application/pdf" });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-      setOptimizedPdfUrl(pdfUrl); // Show download link
+  
+      const pdfBlob = await response.blob();
+      setOptimizedPdfContent(pdfBlob);
+      setShowDialog(true); // Show download dialog
       toast.success("Issues fixed successfully!");
     } catch (error) {
       toast.error("An error occurred while fixing issues.");
@@ -92,23 +87,7 @@ const OptimizeResume: NextPage = () => {
       setLoading(false);
     }
   };
-
-  function GradientCircularProgress() {
-    return (
-      <React.Fragment>
-        <svg width={0} height={0}>
-          <defs>
-            <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e01cd5" />
-              <stop offset="100%" stopColor="#1CB5E0" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <CircularProgress sx={{ "svg circle": { stroke: "url(#my_gradient)" } }} />
-      </React.Fragment>
-    );
-  }
-
+  
   return (
     <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen px-4">
       <Head>
@@ -140,45 +119,36 @@ const OptimizeResume: NextPage = () => {
             />
           </div>
 
-          {!loading ? (
-            <button
-              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
-              type="submit"
-            >
-              Optimize Resume &rarr;
-            </button>
-          ) : (
-            <GradientCircularProgress />
+          {!responseData && !showDialog && (
+          <button
+            className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? <CircularProgress color="inherit" /> : "Optimize Resume →"}
+          </button>
           )}
         </form>
 
-        {responseData && (
-          <ATSSummary responseData={responseData} />
-        )}
-
-        {optimizedPdfUrl ? (
-          <a
-            href={optimizedPdfUrl}
-            download="optimized_resume.pdf"
-            className="mt-10 bg-green-600 rounded-xl text-white font-medium px-4 py-2 hover:bg-green-700 w-full text-center"
-          >
-            Download Optimized Resume
-          </a>
-        ) : loading ? (
-          <GradientCircularProgress />
-        ) : (
-          responseData && (
+        {!loading && responseData && !showDialog && (
+          <>
+            <ATSSummary responseData={responseData} />
             <button
               onClick={fixIssuesHandler}
-              className="mt-10 bg-blue-600 rounded-xl text-white font-medium px-4 py-2 hover:bg-blue-700 w-full"
+              className="mt-10 bg-blue-600 rounded-xl text-white font-medium px-4 py-2 hover:bg-blue-700 w-full max-w-xl"
             >
               Fix Issues
             </button>
-          )
+          </>
+        )}
+        {showDialog && optimizedPdfContent && (
+          <DownloadDialog pdfBlob={optimizedPdfContent}/>
         )}
 
         <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 2000 }} />
         <Footer />
+
+
       </main>
     </div>
   );
