@@ -12,21 +12,6 @@ const Home: NextPage = () => {
       <Head>
         <title>Welcome to Resify</title>
         <link rel="icon" href="/favicon.ico" />
-        <Script
-        strategy="lazyOnload"
-        src={`https://www.googletagmanager.com/gtag/js?id=G-NJXE71TQ9Z`}
-        />
-
-        <Script strategy="lazyOnload">
-          {`
-                      window.dataLayer = window.dataLayer || [];
-                      function gtag(){dataLayer.push(arguments);}
-                      gtag('js', new Date());
-                      gtag('config', 'G-NJXE71TQ9Z', {
-                      page_path: window.location.pathname,
-                      });
-                  `}
-        </Script>
       </Head>
       <Header />
 
