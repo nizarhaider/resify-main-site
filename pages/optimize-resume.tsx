@@ -15,6 +15,22 @@ import React from "react";
 
 registerPlugin(FilePondPluginFileValidateType);
 
+function GradientCircularProgress() {
+  return (
+    <React.Fragment>
+      <svg width={0} height={0}>
+        <defs>
+          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e01cd5" />
+            <stop offset="100%" stopColor="#1CB5E0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <CircularProgress sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }} />
+    </React.Fragment>
+  );
+}
+
 const OptimizeResume: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -119,15 +135,19 @@ const OptimizeResume: NextPage = () => {
             />
           </div>
 
-          {!responseData && !showDialog && (
+          {!loading ? (
           <button
             className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
             type="submit"
-            disabled={loading}
           >
-            {loading ? <CircularProgress color="inherit" /> : "Optimize Resume →"}
+            Optimize Resume  
           </button>
-          )}
+          ) : (
+            <div className="flex justify-center w-full py-4">
+            <GradientCircularProgress />
+          </div>
+          )
+          }
         </form>
 
         {!loading && responseData && !showDialog && (

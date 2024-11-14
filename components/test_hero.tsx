@@ -20,13 +20,13 @@ const TestHero = () => {
                             href="/optimize-resume"
                             className="bg-black text-white font-medium px-6 py-3 rounded-lg hover:bg-black/80 transition duration-200"
                             >
-                            Optimize Resume
+                                Optimize Resume
                             </a>
                             <a
                             href="/convert-to-website"
                             className="bg-black text-white font-medium px-6 py-3 rounded-lg hover:bg-black/80 transition duration-200"
                             >
-                            Convert Resume to Website
+                                Convert Resume to Website
                             </a>
                         </div>
 

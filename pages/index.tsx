@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Hero from "../components/Hero";
 import TestHero from "../components/test_hero";
+import Script from "next/script";
 
 const Home: NextPage = () => {
   return (
@@ -11,8 +12,22 @@ const Home: NextPage = () => {
       <Head>
         <title>Welcome to Resify</title>
         <link rel="icon" href="/favicon.ico" />
-      </Head>
+        <Script
+        strategy="lazyOnload"
+        src={`https://www.googletagmanager.com/gtag/js?id=G-MLB7B88S7K`}
+        />
 
+        <Script strategy="lazyOnload">
+          {`
+                      window.dataLayer = window.dataLayer || [];
+                      function gtag(){dataLayer.push(arguments);}
+                      gtag('js', new Date());
+                      gtag('config', 'G-MLB7B88S7K', {
+                      page_path: window.location.pathname,
+                      });
+                  `}
+        </Script>
+      </Head>
       <Header />
 
       <main className="flex flex-1 w-full flex-col items-center text-center mt-12 sm:mt-20">
