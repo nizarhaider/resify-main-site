@@ -1,10 +1,10 @@
 // ATSSummary.tsx
 import React from 'react';
 
-export default function ATSSummary({ responseData }: { responseData: any }) {
-  if (!responseData) return null;
+export default function ATSSummary({ evaluationData }: { evaluationData: any }) {
+  if (!evaluationData) return null;
 
-  const { content, total_tokens, cost_incurred } = responseData;
+  const { content, total_tokens, cost_incurred } = evaluationData;
   const atsSummary = content.ats_summary;
   const maxScores = {
     layout: 6,

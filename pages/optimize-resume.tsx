@@ -30,15 +30,13 @@ function GradientCircularProgress() {
     </React.Fragment>
   );
 }
-
 const OptimizeResume: NextPage = () => {
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [responseData, setResponseData] = useState<any>(null);
+  const [evaluationData, setEvaluationData] = useState<any>(null);
   const [pdfContent, setPdfContent] = useState<string | ArrayBuffer | null>(null);
   const [imgContent, setImgContent] = useState<string | ArrayBuffer | null>(null);
   const [optimizedPdfContent, setOptimizedPdfContent] = useState<Blob | null>(null);
-  const [showDialog, setShowDialog] = useState(false); // Dialog control
 
   const handleFileChange = (fileItems: any) => {
     const file = fileItems[0]?.file;
@@ -56,7 +54,6 @@ const OptimizeResume: NextPage = () => {
   const submitHandler = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setShowDialog(false);
 
     const url = `https://5g1par1mud.execute-api.ap-southeast-1.amazonaws.com/prod/assess_resume`;
 
@@ -69,9 +66,8 @@ const OptimizeResume: NextPage = () => {
       if (!response.ok) throw new Error("Failed to process the file");
 
       const data = await response.json();
-      setResponseData(data);
+      setEvaluationData(data);
       setImgContent(data.image_encoded);
-      
       toast.success("Processing Complete!");
     } catch (error) {
       toast.error("An error occurred during processing.");
@@ -82,20 +78,19 @@ const OptimizeResume: NextPage = () => {
 
   const fixIssuesHandler = async () => {
     if (!pdfContent) return;
-  
+
     setLoading(true);
-  
+
     try {
       const response = await fetch("https://5g1par1mud.execute-api.ap-southeast-1.amazonaws.com/prod/optimize_resume", {
         method: "POST",
         body: imgContent,
       });
-  
+
       if (!response.ok) throw new Error("Failed to fix issues");
-  
+
       const pdfBlob = await response.blob();
       setOptimizedPdfContent(pdfBlob);
-      setShowDialog(true); // Show download dialog
       toast.success("Issues fixed successfully!");
     } catch (error) {
       toast.error("An error occurred while fixing issues.");
@@ -103,7 +98,7 @@ const OptimizeResume: NextPage = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="flex max-w-5xl mx-auto flex-col items-center justify-center py-2 min-h-screen px-4">
       <Head>
@@ -135,40 +130,40 @@ const OptimizeResume: NextPage = () => {
             />
           </div>
 
-          {!loading ? (
-          <button
-            className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
-            type="submit"
-          >
-            Optimize Resume  
-          </button>
-          ) : (
+          {loading && (
             <div className="flex justify-center w-full py-4">
-            <GradientCircularProgress />
-          </div>
-          )
-          }
+              <GradientCircularProgress />
+            </div>
+          )}
+
+          {!loading && !evaluationData && !optimizedPdfContent && (
+            <button
+              className="bg-black rounded-xl text-white font-medium px-4 py-2 hover:bg-black/80 w-full"
+              type="submit"
+            >
+              Optimize Resume
+            </button>
+          )}
         </form>
 
-        {!loading && responseData && !showDialog && (
+        {!loading && evaluationData && !optimizedPdfContent && (
           <>
-            <ATSSummary responseData={responseData} />
+            <ATSSummary evaluationData={evaluationData} />
             <button
               onClick={fixIssuesHandler}
-              className="mt-10 bg-blue-600 rounded-xl text-white font-medium px-4 py-2 hover:bg-blue-700 w-full max-w-xl"
+              className="bg-black rounded-xl text-white font-medium mt-5 px-4 py-2 hover:bg-black/80 w-full"
             >
               Fix Issues
             </button>
           </>
         )}
-        {showDialog && optimizedPdfContent && (
-          <DownloadDialog pdfBlob={optimizedPdfContent}/>
+
+        {!loading && optimizedPdfContent && (
+          <DownloadDialog pdfBlob={optimizedPdfContent} />
         )}
 
         <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 2000 }} />
         <Footer />
-
-
       </main>
     </div>
   );
